@@ -61,7 +61,7 @@ private class MyTask extends AsyncTask<String,Void,String>{
 
                     String result = "Database Connection Successful\n";
                     Statement st = conn.createStatement();
-                    ResultSet rs = st.executeQuery("select distinct Heading from Test;");
+                    ResultSet rs = st.executeQuery("select distinct Heading from Test;");//
                     ResultSetMetaData rsmd = rs.getMetaData();
 
                     while (rs.next()) {
@@ -87,11 +87,10 @@ private class MyTask extends AsyncTask<String,Void,String>{
         txtData.setText(result);
     }
 
-}
-//mytask
+}//mytask
 
 
-
+/*
         private class ConnectMySql extends AsyncTask<String, Void, String> {
         String res = "";
 
@@ -132,6 +131,6 @@ private class MyTask extends AsyncTask<String,Void,String>{
         }
     }
 
-
+*/
 
 }
