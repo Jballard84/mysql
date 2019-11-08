@@ -2,27 +2,45 @@ package parallelcodes.mysqlapp;
 
 
 
+import android.content.Context;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.SupportMapFragment;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-public class MainActivity  extends AppCompatActivity {
+public class MainActivity  extends AppCompatActivity implements GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener, OnMapReadyCallback {
 
     private static final String url = "jdbc:mariadb://10.123.21.91:3306/myDB";
     private static final String user = "BallardPi";
     private static final String pass = "BallardPi";
+
+    private GoogleMap mMap;
+
     Button btnFetch,btnClear;
     TextView txtData;
+
+    // http://10.123.21.91/phpmyadmin/index.php
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,9 +66,40 @@ public class MainActivity  extends AppCompatActivity {
             }
         });
 
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        //mapFragment.getMapAsync(this);
     }
-private class MyTask extends AsyncTask<String,Void,String>{
-    String res = "";
+
+    @Override
+    public boolean onMyLocationButtonClick() {
+        return false;
+    }
+
+    @Override
+    public void onMyLocationClick(@NonNull Location location) {
+        //Toast.makeText(this, "Location found");
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+        // public Location getMyLocation
+        // Add a marker in Sydney and move the camera
+        //LatLng UNCA_Quad = new LatLng(35.616314, -82.56732);
+        //mMap.addMarker(new MarkerOptions().position(UNCA_Quad).title("Marker in Asheville quad"));
+        //mMap.moveCamera(CameraUpdateFactory.newLatLng(UNCA_Quad));
+        mMap.setMyLocationEnabled(true);
+        mMap.setOnMyLocationButtonClickListener(this);
+        mMap.setOnMyLocationClickListener(this);
+
+    }
+
+    private class MyTask extends AsyncTask<String,Void,String>{
+        String res = "";
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        Location loc = locationManager.getLastKnownLocation(locationManager.GPS_PROVIDER);
         @Override
         protected String doInBackground(String... strings) {
             try {
@@ -59,15 +108,23 @@ private class MyTask extends AsyncTask<String,Void,String>{
                     Connection conn = DriverManager.getConnection(url,user,pass);
                     System.out.println("Database connection success");
 
-                    String result = "Database Connection Successful\n";
-                    Statement st = conn.createStatement();
-                    ResultSet rs = st.executeQuery("select distinct Heading from Test;");//
-                    ResultSetMetaData rsmd = rs.getMetaData();
+                    // the mysql insert statement
+                    String query = " insert into Test (Heading, Speed, Longitude, Latitude)"
+                            + " values (?, ?, ?, ?)";
 
-                    while (rs.next()) {
-                        result += rs.getString(1).toString() + "\n";
-                    }
+                    // create the mysql insert preparedstatement
+                    PreparedStatement preparedStmt = conn.prepareStatement(query);
+                    preparedStmt.setInt (1, 't');
+                    preparedStmt.setFloat (2, 3);
+                    loc = mMap.getMyLocation();
+                    preparedStmt.setDouble (3, loc.getLongitude());
+                    preparedStmt.setDouble (4, loc.getLatitude());
+
+                    String result = "Database Connection Successful\n";
+                    preparedStmt.execute();
+
                     res = result;
+
                 } catch (Exception e) {
                     e.printStackTrace();
                     res = e.toString();
@@ -86,6 +143,8 @@ private class MyTask extends AsyncTask<String,Void,String>{
     protected void onPostExecute(String result) {
         txtData.setText(result);
     }
+
+
 
 }//mytask
 
