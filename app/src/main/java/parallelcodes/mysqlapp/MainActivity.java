@@ -39,6 +39,7 @@ public class MainActivity  extends AppCompatActivity implements GoogleMap.OnMyLo
     private static final String pass = "BallardPi";
     private static boolean update = false;
     MyTask myTask = new MyTask(this);
+    MyTask myTask2 = new MyTask(this);
 
     private GoogleMap mMap;
 
@@ -97,6 +98,7 @@ public class MainActivity  extends AppCompatActivity implements GoogleMap.OnMyLo
 
         private MyTask(MainActivity main){
             help = main;
+            txtData.setText("Database is being updated");
         }
 
         @Override
@@ -104,7 +106,7 @@ public class MainActivity  extends AppCompatActivity implements GoogleMap.OnMyLo
 
             LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             Criteria criteria = new Criteria();
-            String result = "Database Connection Successful\n";
+            String result = "Database updated with new coordinates\n";
             Connection conn = null;
 
                 try {
