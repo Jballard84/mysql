@@ -4,11 +4,14 @@ package parallelcodes.mysqlapp;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.BatteryManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
@@ -26,15 +29,14 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class MainActivity  extends AppCompatActivity implements GoogleMap.OnMyLocationButtonClickListener, GoogleMap.OnMyLocationClickListener, OnMapReadyCallback {
 
-    private static final String url = "jdbc:mariadb://10.123.21.91:3306/myDB";
+    private static final String url = "jdbc:mariadb://10.123.21.91:3306/EarthDrone";
     private static final String user = "BallardPi";
     private static final String pass = "BallardPi";
-    private static boolean connected = false;
     private static boolean update = false;
     MyTask myTask = new MyTask(this);
 
@@ -57,8 +59,6 @@ public class MainActivity  extends AppCompatActivity implements GoogleMap.OnMyLo
 
             @Override
             public void onClick(View v) {
-                // myTask = new myTask();
-                //    Try this to update one line in database at a time
                 myTask.execute();
             }
         });
@@ -113,38 +113,52 @@ public class MainActivity  extends AppCompatActivity implements GoogleMap.OnMyLo
                         conn = DriverManager.getConnection(url, user, pass);
                         System.out.println("Database connection success");
 
+                        //Context context = new Context();
+
+                        //IntentFilter ifilter = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+                        //Intent batteryStatus = context.registerReceiver(null, ifilter);
+
+                        //int status = batteryStatus.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+
                         if (ContextCompat.checkSelfPermission(help, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) { // coarse permission is granted
                             //Location loc = locationManager.getLastKnownLocation(locationManager.getBestProvider(criteria, false));
 
                             // the mysql insert statement
-                            for(int i=0; i<100; i++) {
-                                String query = " insert into Test (Heading, Speed, Longitude, Latitude)"
-                                        + " values (?, ?, ?, ?)";
-
-                                // create the mysql insert prepared statement
-                                PreparedStatement preparedStmt = conn.prepareStatement(query);
+                            int i = 0;
+                            while(true) {
+                                i++;
                                 if(update) {
-                                    preparedStmt.setInt(1, 2);
-                                    preparedStmt.setFloat(2, 3);
-                                    preparedStmt.setDouble(3, -82.565981);
-                                    preparedStmt.setDouble(4, 35.616759);
+                                    Statement preparedStmt = conn.createStatement();
 
-                                    preparedStmt.execute();
+                                    preparedStmt.execute(" Update Test Set Battery='" + i + "' Where Row = '1'");
+
+                                    preparedStmt.execute(" Update Test Set Heading='W' Where Row = '1'");
+
+                                    preparedStmt.execute(" Update Test Set Lon='-82.565806' Where Row = '1'");
+
+                                    preparedStmt.execute(" Update Test Set Lat='35.615243' Where Row = '1'");
+                                    update = false;
                                 }else{
-                                    preparedStmt.setInt(1, 2);
-                                    preparedStmt.setFloat(2, 3);
-                                    preparedStmt.setDouble(3, -82.565981);
-                                    preparedStmt.setDouble(4, 35.616759);
+                                    Statement preparedStmt = conn.createStatement();
 
-                                    preparedStmt.execute();
+                                    preparedStmt.execute(" Update Test Set Battery='" + i + "' Where Row = '1'");
+
+                                    preparedStmt.execute(" Update Test Set Heading='E' Where Row = '1'");
+
+                                    preparedStmt.execute(" Update Test Set Lon='-82.565981' Where Row = '1'");
+
+                                    preparedStmt.execute(" Update Test Set Lat='35.616759' Where Row = '1'");
+                                    update = true;
                                 }
 
+                                Thread.sleep(3000);
+
                             }
-                            try {
+                            /*try {
                                 conn.close();
                             } catch (SQLException e) {
                                 e.printStackTrace();
-                            }
+                            }*/
                         } else { // permission is not granted, request for permission
                             if (ActivityCompat.shouldShowRequestPermissionRationale(help, Manifest.permission.ACCESS_COARSE_LOCATION)) { // show some info to user why you want this permission
                                 //Toast.makeText(this, "Allow Location Permission to use this functionality.", Toast.LENGTH_SHORT).show();
